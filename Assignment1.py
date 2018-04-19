@@ -58,7 +58,6 @@ with open('dataset_mood_smartphone.csv') as csvfile:
             
 #%% Create average for days and reallocate as such
 from datetime import datetime
-from datetime import date as dt
 #var for next section
 ndays = 0;
 nregr=5;
@@ -72,15 +71,22 @@ for patient in patients:
     
     for day in patients[patient]:
         ndaysprev=ndays;
+        timeSlots = np.zeros(24)
         
-        for attrib in patients[patient][day]:
+        attribs = list(filter(lambda x: '_count' not in x, patients[patient][day].keys()))
+        for attrib in attribs:
             S=0.0
-            countDays=0.0
+            countTimes=0.0
             for time in patients[patient][day][attrib]:
                 S+=patients[patient][day][attrib][time]
-                countDays+=1;
-            patients[patient][day][attrib] = S/countDays
-            
+                countTimes+=1;
+                if attrib in ['appCat.social','appCat.game','appCat.entertainment' \
+                              ,'appCat.weather','appCat.communication','call','sms']:
+                    timeSlots[int(time[:2])]=1;
+            patients[patient][day][attrib] = S
+            patients[patient][day][attrib+'_count'] = countTimes
+            patients[patient][day]['sleep'] = sum(timeSlots)
+            patients[patient][day]['nightlife'] = any(timeSlots[:7])
     #ndays-=nregr;
     ndays=max(ndays,ndaysprev)
             
@@ -92,7 +98,6 @@ for patient in patients:
 
 #NOTE: next(iter(patients.values())) can be used ot access first element
 target = 'mood'
-nattribs = 19
 attributeList = ['mood',
  'screen',
  'appCat.builtin',
@@ -111,7 +116,14 @@ attributeList = ['mood',
  'appCat.finance',
  'appCat.unknown',
  'appCat.game',
- 'appCat.weather']
+ 'appCat.weather',
+ 'sleep',
+ 'nightlife']
+
+#Sleep and nighlife not included, that do not have a count
+for i in range(len(attributeList)-2):
+    attributeList.insert(i*2+1,attributeList[i*2]+'_count')
+nattribs = len(attributeList)
 
 ndays+=1;
 npatients = len(patients.keys())
@@ -173,15 +185,15 @@ for attr in attributeList:
     if attr != attributeList[-1]:
         f.write(',')
     
-for i in range(4):
-    print('Patient %d'%i)
+for i in range(npatients):
+    '''print('Patient %d'%i)
     plt.figure(figsize=(12,10))
     for j in range(nattribs):
         plt.subplot(5,4,j+1)
         plt.scatter(range(len(patientTable[i,:,j])),patientTable[i,:,j])
         plt.title(attributeList[j])
         plt.ylabel('Mean Value')
-        plt.xlabel('Time')
+        plt.xlabel('Time')'''
     
     for j in range(ndays):
         for k in range(nattribs):
@@ -191,14 +203,14 @@ for i in range(4):
         f.write('\n')
         
     #f.write('\n')
-    plt.tight_layout()
-    plt.show()
+    '''plt.tight_layout()
+    plt.show()'''
 f.close();
 #screen time should matter
 #plt.plot(patientTable[:,-2])
             
 #%% 
-from scipy.stats import pearsonr
+'''from scipy.stats import pearsonr
 def getStats(X,y,contrast=np.array([0])):
     B = lstsq(X, y)[0]
     y_hat = X.dot(B)
@@ -227,5 +239,5 @@ X_with_icept = np.hstack(tuple_with_arrays);
                          
 y_hat,MSE, r_squared = getStats(X,Y)
 
-np.savetxt("missing_data_per_patient.csv", patientTable, delimiter=",", fmt='%s', header=attributeList)
+np.savetxt("missing_data_per_patient.csv", patientTable, delimiter=",", fmt='%s', header=attributeList)'''
 
