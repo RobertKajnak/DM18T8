@@ -163,23 +163,50 @@ patientsTrimmed = []
 for i in range(npatients):
     print ('patient %d data:'%i)
     reducedPatient = reduceTableSize(patientTable[i][:][:],entryLimit=3,maxNanCount=.4)
+    
     if reducedPatient.shape[0]>=25:
         patientsTrimmed.append(reducedPatient)
+    else:
+        print(i)
     #plotPatient(reducedPatient,attributeList)
     #reducedPatient0.shape = (1,reducedPatient0.shape[0],reducedPatient0.shape[1])
 
-#%%
+#%% preporcessing the RAW data
 from sklearn.preprocessing import Imputer
 
 patientsEstimated = []
+
+flag = True
 for patient in patientsTrimmed:
+    #calculate variance
+    stds = [np.std(list(filter(lambda x : not np.isnan(x) , a))) for a in patient.transpose()]
+    means = [np.mean(a) for a in patient.transpose()]
+        
+    patientNoOutliers = \
+            np.array(list(list(map(lambda x: means[i]-4*stds[i] if x<means[i]-4*stds[i] else \
+                  means[i]+4*stds[i] if x>means[i]+4*stds[i] else x,row)) \
+                    for i,row in enumerate(patient.T))).T
+    if flag:
+        print(patientNoOutliers[-4])
+    meansNew = [np.mean(a) for a in patientNoOutliers]
+    #patientsFilled = np.array(list(list(map(lambda x: meansNew[i] if x>10 else x,row)) \
+    #                      for i,row in enumerate(patientNoOutliers))).T
+    #if flag:
+    #    print(patientsFilled[-4])
+        
     imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
-    imp.fit(patient)
-    patientEstimated = imp.transform(patient)
+    imp.fit(patientNoOutliers)
+    patientEstimated = imp.transform(patientNoOutliers)
     patientsEstimated.append(patientEstimated)
     #plotPatient(patientEstimated,attributeList)
-
-
+    flag=False;
+est = patientsEstimated[0].T[4]
+trim = patientsTrimmed[0].T[4]
+print('max est:%f  trim: %f'%(max(est),max(trim)))
+print('expected: %f'%(np.mean(trim)+4*np.std(trim)))
+#plotPatient(patientsTrimmed[0],attributeList)
+#plotPatient(patientsEstimated[0],attributeList)
+#list(list(map(lambda x: lim[i] if x<lim[i] else x,b)) for i,b in enumerate(aa))
 #%% Output results to a file
 from helperFunctions import writeTableToCSV
 isWriteToFile = 0
@@ -188,36 +215,3 @@ filename = 'missingDataSinglePatiens.csv'
 if isWriteToFile:
     writeTableToCSV(filename,patientTable,attributeList)
     
-            
-#%% 
-'''from scipy.stats import pearsonr
-def getStats(X,y,contrast=np.array([0])):
-    B = lstsq(X, y)[0]
-    y_hat = X.dot(B)
-    MSE = sum((y_hat-y)**2)/X.shape[0]
-    
-    corr, pvalue = pearsonr(y, y_hat)
-    r_squared = corr ** 2
-    if contrast.any():
-        des_var = contrast.dot(np.linalg.pinv(X.T.dot(X))).dot(contrast.T)
-        sse_df = ((y - y_hat) ** 2).sum() / (X.shape[0] - X.shape[1])
-        se = np.sqrt(sse_df * des_var)
-        t_val = contrast.dot(B) / se
-
-        return y_hat, MSE, r_squared,t_val
-    else:
-        return y_hat, MSE, r_squared
-    
-#%% Find the betas for possible correlations
-from numpy.linalg import lstsq
-
-Y = patientTable[:,0]
-X = patientTable[:,1:]
-intercept = np.ones((ndays, 1))
-tuple_with_arrays = (intercept, X)
-X_with_icept = np.hstack(tuple_with_arrays);
-                         
-y_hat,MSE, r_squared = getStats(X,Y)
-
-np.savetxt("missing_data_per_patient.csv", patientTable, delimiter=",", fmt='%s', header=attributeList)'''
-
