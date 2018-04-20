@@ -57,6 +57,7 @@ with open('dataset_mood_smartphone.csv') as csvfile:
         #    break;
             
 #%% Create average for days and reallocate as such
+#also add additional variables
 from datetime import datetime
 #var for next section
 ndays = 0;
@@ -150,36 +151,41 @@ for indPatient,patient in enumerate(patients):
             patientTable[indPatient][indDay][indAttr] = patients[patient][day][attr]
 
 
-#%%
-from helperFunctions import plotPatients 
-plotPatients(patientTable[:1][:][:],attributeList)
-#%%
+#%% Visually check the elements of the table
+#from helperFunctions import plotPatients 
+#plotPatients(patientTable[:1][:][:],attributeList)
+#%% Reduce the table sizes by removing rows from the end and the beginning,
+# that have less than 65% of measurements
 from helperFunctions import reduceTableSize
-
+from helperFunctions import plotPatient
 #test. Correct answer for the provided dataset == 44
-reducedPatient0 = reduceTableSize(patientTable[0][:][:])
-print('%s -> %s'%(patientTable[0][:][:].shape,reducedPatient0.shape))
-reducedPatient0.shape = (1,reducedPatient0.shape[0],reducedPatient0.shape[1])
-#plotPatients(reducedPatient0,attributeList)
+patientsTrimmed = []
+for i in range(npatients):
+    print ('patient %d data:'%i)
+    reducedPatient = reduceTableSize(patientTable[i][:][:],entryLimit=3)
+    patientsTrimmed.append(reducedPatient)
+    #plotPatient(reducedPatient,attributeList)
+    #reducedPatient0.shape = (1,reducedPatient0.shape[0],reducedPatient0.shape[1])
 
 #%%
-import numpy as np
 from sklearn.preprocessing import Imputer
 
-imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
-imp.fit(patientTable[0][:][:])
-filledPatient=imp.transform(patientTable[0][:][:])
-filledPatient.shape = (1,filledPatient.shape[0],filledPatient.shape[1])
-plotPatients(filledPatient,attributeList)
+patientsEstimated = []
+for patient in patientsTrimmed:
+    imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
+    imp.fit(patient)
+    patientEstimated = imp.transform(patient)
+    patientsEstimated.append(patientEstimated)
+    #plotPatient(patientEstimated,attributeList)
 
 
 #%% Output results to a file
-from helperFunctions import writeTableToCSV234
+from helperFunctions import writeTableToCSV
 isWriteToFile = 0
 filename = 'missingDataSinglePatiens.csv'
 
 if isWriteToFile:
-    writeTableToCSV234(filename,patientTable,attributeList)
+    writeTableToCSV(filename,patientTable,attributeList)
     
             
 #%% 
