@@ -125,6 +125,7 @@ for i in range(len(attributeList)-2):
     attributeList.insert(i*2+1,attributeList[i*2]+'_count')
 nattribs = len(attributeList)
 
+
 ndays+=1;
 npatients = len(patients.keys())
 patientTable = np.zeros([npatients,ndays,nattribs])
@@ -147,67 +148,99 @@ for indPatient,patient in enumerate(patients):
         for attr in patients[patient][day]:
             indAttr = attributeList.index(attr)        
             patientTable[indPatient][indDay][indAttr] = patients[patient][day][attr]
-        
-#%%
-'''
-for patient in patients:
-    attribs = list(patients[patient].keys())
-    indT = attribs.index(target)
-    #swap the target witht the first element
-    attribs[0],attribs[indT] = attribs[indT],attribs[0]
-    attribs[1:] = sorted(attribs[1:])
-    for indA,attrib in enumerate(attribs):
-        avgs=[]
-        
-        #print(indD)
-        indD=-nregr;
-        for i,day in enumerate(patients[patient][attrib]):
-            j= min(i,nregr)
-                
-            if attrib==target:
-                if indD>=0:
-                    patientTable[indD][indA] = patients[patient][attrib][day]
-            else:
-                avgs.insert(0, patients[patient][attrib][day])
-                #we want the avg to be 1 less than the index of the target
-                if len(avgs)>=nregr:
-                    avgs.pop(-1)
-                    patientTable[indD][indA] = np.mean(avgs)
-            indD+=1;
-'''
 #%% plot two of the attributes to see visually check results
-
 import matplotlib.pyplot as plt
+def plotPatients(patientTable,attributeList):
+    npatients= patientTable.shape[0]
+    nattribs=patientTable.shape[2]
+    for i in range(npatients):
+        print('Patient %d'%i)
+        plt.figure(figsize=(14,25))
+        for j in range(nattribs):
+            plt.subplot(np.ceil(nattribs/3),3,j+1)
+            plt.plot(range(len(patientTable[i,:,j])),patientTable[i,:,j])
+            plt.title(attributeList[j])
+            plt.ylabel('Mean Value')
+            plt.xlabel('Time')
+    
+        plt.tight_layout()
+        plt.show()
+    return
 
-f = open('missingDataSinglePatiens.csv','w')
-for attr in attributeList:
-    f.write(attr)
-    if attr != attributeList[-1]:
-        f.write(',')
+#%%
+plotPatients(patientTable[:1][:][:],attributeList);
+#%%
+
+def reduceTableSize(table,maxNanCount=.35,entryLimit = 3):
+    height = table.shape[0]
+    width = table.shape[1]
     
-for i in range(npatients):
-    '''print('Patient %d'%i)
-    plt.figure(figsize=(12,10))
-    for j in range(nattribs):
-        plt.subplot(5,4,j+1)
-        plt.scatter(range(len(patientTable[i,:,j])),patientTable[i,:,j])
-        plt.title(attributeList[j])
-        plt.ylabel('Mean Value')
-        plt.xlabel('Time')'''
+    start = 0
+    end = height;
+    isStartFound = False;
+    prev = []
     
-    for j in range(ndays):
-        for k in range(nattribs):
-            f.write(str(patientTable[i,j,k]))
-            if k!=nattribs-1:
-                f.write(',')
-        f.write('\n')
+    def isAcceptable(i):
+        return np.count_nonzero(np.isnan(table[i-entryLimit:i]))<(width*entryLimit)*maxNanCount
+    
+    for i in range(entryLimit):
+        prev.append(isAcceptable(i))
+    
+    #deque may provide slightly better performance, but the amount of days does not\
+    #warrant the additional readablility hindrance
+    for i in range(entryLimit,height):
+        prev.pop(0)
+        prev.append(isAcceptable(i))
+        #check if more than 30% of the data is missing fromt he last entryLimit rows
+        #if not that much data missing, the true array starts from there
+        if not isStartFound and prev.count(True)==entryLimit:
+            start = i-3
+            isStartFound = True
+        #If the last three rows had more than 30% empty, that's the end
+        if isStartFound and prev.count(False)==entryLimit:
+            end = i
+            break;
+            
+    print(start)
+    print(end)
+    return table[start:end][:]
+
+#test. Correct answer for the provided dataset == 44
+reducedPatient0 = reduceTableSize(patientTable[0][:][:])
+print('%s -> %s'%(patientTable[0][:][:].shape,reducedPatient0.shape))
+reducedPatient0.shape = (1,reducedPatient0.shape[0],reducedPatient0.shape[1])
+#plotPatients(reducedPatient0,attributeList)
+
+#%%
+import numpy as np
+from sklearn.preprocessing import Imputer
+
+imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
+imp.fit(patientTable[0][:][:])
+filledPatient=imp.transform(patientTable[0][:][:])
+filledPatient.shape = (1,filledPatient.shape[0],filledPatient.shape[1])
+plotPatients(filledPatient,attributeList)
+
+
+#%% Output results to a file
+isWriteToFile = 0
+if isWriteToFile:
+    f = open('missingDataSinglePatiens.csv','w')
+    for attr in attributeList:
+        f.write(attr)
+        if attr != attributeList[-1]:
+            f.write(',')
         
-    #f.write('\n')
-    '''plt.tight_layout()
-    plt.show()'''
-f.close();
-#screen time should matter
-#plt.plot(patientTable[:,-2])
+    for i in range(npatients):    
+        for j in range(ndays):
+            for k in range(nattribs):
+                f.write(str(patientTable[i,j,k]))
+                if k!=nattribs-1:
+                    f.write(',')
+            f.write('\n')
+            
+        #f.write('\n')
+    f.close();
             
 #%% 
 '''from scipy.stats import pearsonr
