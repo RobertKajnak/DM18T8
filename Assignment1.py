@@ -186,8 +186,8 @@ for patient in patientsTrimmed:
             np.array(list(list(map(lambda x: means[i]-4*stds[i] if x<means[i]-4*stds[i] else \
                   means[i]+4*stds[i] if x>means[i]+4*stds[i] else x,row)) \
                     for i,row in enumerate(patient.T))).T
-    if flag:
-        print(patientNoOutliers[-4])
+    #if flag:
+    #    print(patientNoOutliers[-4])
     meansNew = [np.mean(a) for a in patientNoOutliers]
     #patientsFilled = np.array(list(list(map(lambda x: meansNew[i] if x>10 else x,row)) \
     #                      for i,row in enumerate(patientNoOutliers))).T
@@ -197,15 +197,23 @@ for patient in patientsTrimmed:
     imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
     imp.fit(patientNoOutliers)
     patientEstimated = imp.transform(patientNoOutliers)
+    #flag=False;
+    '''
+    maximums = [max(a) for a in patientEstimated]
+    minimums = [min(a) for a in patientEstimated]
+    
+    patientNormalized = \
+        np.array(list(list(map(lambda x: ((x - minimums[i])/(maximums[i] - minimums[i])),row)) \
+                    for i,row in enumerate(patientEstimated))).T
+    '''                           
     patientsEstimated.append(patientEstimated)
-    #plotPatient(patientEstimated,attributeList)
-    flag=False;
+    
 est = patientsEstimated[0].T[4]
 trim = patientsTrimmed[0].T[4]
 print('max est:%f  trim: %f'%(max(est),max(trim)))
 print('expected: %f'%(np.mean(trim)+4*np.std(trim)))
 #plotPatient(patientsTrimmed[0],attributeList)
-#plotPatient(patientsEstimated[0],attributeList)
+plotPatient(patientsEstimated[0],attributeList)
 #list(list(map(lambda x: lim[i] if x<lim[i] else x,b)) for i,b in enumerate(aa))
 #%% Output results to a file
 from helperFunctions import writeTableToCSV

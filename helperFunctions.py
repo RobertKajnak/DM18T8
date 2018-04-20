@@ -90,6 +90,6 @@ def reduceTableSize(table,maxNanCount=.35,entryLimit = 3):
             end = i+4
             break;
             
-    print('Considering indices %d->%d, total of %d'%(start,end,end-start))
+    #print('Considering indices %d->%d, total of %d'%(start,end,end-start))
     return table[start:end][:]
 
