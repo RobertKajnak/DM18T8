@@ -56,15 +56,12 @@ def plotPatient(patient,attributeList):
 def reduceTableSize(table,maxNanCount=.35,entryLimit = 3):
     height = table.shape[0]
     width = table.shape[1]
-    
-    start = 0
-    end = height;
-    isStartFound = False;
-    prev = []
-    
     def isAcceptable(i):
-        return np.count_nonzero(np.isnan(table[i-entryLimit:i]))<(width*entryLimit)*maxNanCount
+        #print(np.count_nonzero(np.isnan(table[i-entryLimit:i])))
+        return np.count_nonzero(np.isnan(table[i]))<=width*maxNanCount
     
+    start = height
+    prev = []   
     for i in range(entryLimit):
         prev.append(isAcceptable(i))
     
@@ -75,12 +72,22 @@ def reduceTableSize(table,maxNanCount=.35,entryLimit = 3):
         prev.append(isAcceptable(i))
         #check if more than 30% of the data is missing fromt he last entryLimit rows
         #if not that much data missing, the true array starts from there
-        if not isStartFound and prev.count(True)==entryLimit:
+        if prev.count(True)==entryLimit:
             start = i-3
-            isStartFound = True
-        #If the last three rows had more than 30% empty, that's the end
-        if isStartFound and prev.count(False)==entryLimit:
-            end = i
+            break;
+    
+    end = 0;
+    prev = []
+    for i in range(height-1,height-entryLimit-1,-1):
+        prev.append(isAcceptable(i))  
+    for i in reversed(range(height-entryLimit)):
+        prev.pop(0)
+        prev.append(isAcceptable(i))
+        if (i<=start):
+            end = start
+            break;
+        if prev.count(True)==entryLimit:
+            end = i+4
             break;
             
     print('Considering indices %d->%d, total of %d'%(start,end,end-start))

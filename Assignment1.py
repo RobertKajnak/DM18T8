@@ -162,8 +162,9 @@ from helperFunctions import plotPatient
 patientsTrimmed = []
 for i in range(npatients):
     print ('patient %d data:'%i)
-    reducedPatient = reduceTableSize(patientTable[i][:][:],entryLimit=3)
-    patientsTrimmed.append(reducedPatient)
+    reducedPatient = reduceTableSize(patientTable[i][:][:],entryLimit=3,maxNanCount=.4)
+    if reducedPatient.shape[0]>=25:
+        patientsTrimmed.append(reducedPatient)
     #plotPatient(reducedPatient,attributeList)
     #reducedPatient0.shape = (1,reducedPatient0.shape[0],reducedPatient0.shape[1])
 
