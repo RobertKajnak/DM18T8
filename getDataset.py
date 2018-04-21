@@ -165,8 +165,6 @@ def getDataset():
     #%% preporcessing the RAW data -- removing 4sigma outliers,
     #filling in missing values with means, adding 0 if the whole attribute is epty    
     patientsEstimated = []
-    
-
     for patient in patientsTrimmed:
         #calculate variance
         #parse patient column by column. filter out the nan values within colum. 
@@ -175,8 +173,8 @@ def getDataset():
         means = [np.mean(list(filter(lambda x : not np.isnan(x) , a))) for a in patient.transpose()]
     
         patientNoOutliers = \
-                np.array(list(list(map(lambda x: means[i]-4*stds[i] if x<means[i]-4*stds[i] else \
-                      means[i]+4*stds[i] if x>means[i]+4*stds[i] else x,row)) \
+                np.array(list(list(map(lambda x: means[i]-3*stds[i] if x<means[i]-3*stds[i] else \
+                      means[i]+3*stds[i] if x>means[i]+3*stds[i] else x,row)) \
                         for i,row in enumerate(patient.T))).T
     
         meansNew = [np.mean(list(filter(lambda x : not np.isnan(x) , a))) for a in patientNoOutliers.T]
@@ -184,7 +182,7 @@ def getDataset():
     
         patientsFilled = np.array(list(list(map(lambda x: meansNew[i] if np.isnan(x) else x,row)) \
                               for i,row in enumerate(patientNoOutliers.T))).T
-                    
+            
         '''
         maximums = [max(a) for a in patientEstimated]
         minimums = [min(a) for a in patientEstimated]
