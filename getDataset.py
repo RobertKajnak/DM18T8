@@ -215,6 +215,9 @@ def getNormalizedDataset():
             
             if 'count' in name:
                 val = np.divide(patient.T[i-1],patient.T[i])
+                #if the second column contains 0s the first one will be NaN. 
+                #These are replaced with 0. (0 measurements means a mean of 0)
+                val = np.array(list(map(lambda x: 0.0 if np.isnan(x) else x,val)))
             else:
                 val = patient.T[i]
             

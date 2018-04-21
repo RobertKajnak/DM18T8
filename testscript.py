@@ -17,7 +17,7 @@ from getDataset import getNormalizedDataset
 
 '''First parameter is the patient to be plotted, second is the titles for the
 graphs i.e. the attribute names'''
-plotPatient(dataset[1],attributeList)
+plotPatient(dataset[10],attributeList)
 
 '''To save a patient to a  file specify the filename, the patient and the
 attribute list returned above'''
