@@ -1,4 +1,5 @@
 from helperFunctions import plotPatient
+from helperFunctions import writePatientToCSV
 from getDataset import getDataset
 
 
@@ -16,7 +17,11 @@ from getDataset import getDataset
 
 '''First parameter is the patient to be plotted, second is the titles for the
 graphs i.e. the attribute names'''
-plotPatient(dataset[0],attributeList)
+plotPatient(dataset[1],attributeList)
+
+'''To save a patient to a  file specify the filename, the patient and the
+attribute list returned above'''
+writePatientToCSV('patient1.csv',dataset[1],attributeList)
 
 #if __name__ == '__main__':
 #  main()
