@@ -102,3 +102,6 @@ ENV/
 
 # data files
 *.csv
+*.png
+*.jpg
+*.csv
