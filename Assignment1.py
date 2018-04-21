@@ -179,25 +179,26 @@ patientsEstimated = []
 flag = True
 for patient in patientsTrimmed:
     #calculate variance
+    #parse patient column by column. filter out the nan values within colum. 
+    #Calculate std from the remaining values
     stds = [np.std(list(filter(lambda x : not np.isnan(x) , a))) for a in patient.transpose()]
-    means = [np.mean(a) for a in patient.transpose()]
-        
+    means = [np.mean(list(filter(lambda x : not np.isnan(x) , a))) for a in patient.transpose()]
+
     patientNoOutliers = \
             np.array(list(list(map(lambda x: means[i]-4*stds[i] if x<means[i]-4*stds[i] else \
                   means[i]+4*stds[i] if x>means[i]+4*stds[i] else x,row)) \
                     for i,row in enumerate(patient.T))).T
-    #if flag:
-    #    print(patientNoOutliers[-4])
-    meansNew = [np.mean(a) for a in patientNoOutliers]
-    #patientsFilled = np.array(list(list(map(lambda x: meansNew[i] if x>10 else x,row)) \
-    #                      for i,row in enumerate(patientNoOutliers))).T
-    #if flag:
-    #    print(patientsFilled[-4])
+
+    meansNew = [np.mean(list(filter(lambda x : not np.isnan(x) , a))) for a in patientNoOutliers.T]
+    meansNew = [0.0 if np.isnan(mean) else mean for mean in meansNew]
+
+    patientsFilled = np.array(list(list(map(lambda x: meansNew[i] if np.isnan(x) else x,row)) \
+                          for i,row in enumerate(patientNoOutliers.T))).T
         
     imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
     imp.fit(patientNoOutliers)
-    patientEstimated = imp.transform(patientNoOutliers)
-    #flag=False;
+    patientEstimated = imp.transform(patientsFilled)
+    
     '''
     maximums = [max(a) for a in patientEstimated]
     minimums = [min(a) for a in patientEstimated]
@@ -206,15 +207,60 @@ for patient in patientsTrimmed:
         np.array(list(list(map(lambda x: ((x - minimums[i])/(maximums[i] - minimums[i])),row)) \
                     for i,row in enumerate(patientEstimated))).T
     '''                           
-    patientsEstimated.append(patientEstimated)
+    patientsEstimated.append(patientsFilled)
     
 est = patientsEstimated[0].T[4]
 trim = patientsTrimmed[0].T[4]
 print('max est:%f  trim: %f'%(max(est),max(trim)))
 print('expected: %f'%(np.mean(trim)+4*np.std(trim)))
-#plotPatient(patientsTrimmed[0],attributeList)
-plotPatient(patientsEstimated[0],attributeList)
+plotPatient(patientsTrimmed[1],attributeList)
+plotPatient(patientsEstimated[1],attributeList)
+for i in patientsEstimated:
+    print(i.shape)
 #list(list(map(lambda x: lim[i] if x<lim[i] else x,b)) for i,b in enumerate(aa))
+
+#%% Calculate residuals and plot normal Q-Q
+import scipy.stats as stats
+import matplotlib.pyplot as plt
+
+names = list(patients.keys())
+print(names.pop(10))
+print(names.pop(10))
+print(names.pop(10))
+print(names.pop(11))
+
+plt.figure(figsize=(14,25))
+for i,patient in enumerate(patientsEstimated):
+    plt.subplot(np.ceil(len(patientsEstimated)/3),3,i+1)
+    mood = np.divide(patient.T[0],patient.T[1])
+    #plt.plot(mood)
+    mean = np.mean(mood)
+    zscore = (mood-mean)/np.std(mood)
+    stats.probplot(zscore, dist='norm',plot=plt)
+    plt.title('Normal Q-Q plot for subject %s'%names[i])
+    
+plt.tight_layout()
+plt.show()
+    
+#%% 
+import matplotlib.lines as mlines
+
+plt.figure(figsize=(14,25))
+for i,patient in enumerate(patientsEstimated):
+    ax=plt.subplot(np.ceil(len(patientsEstimated)/3),3,i+1)
+    mood = np.divide(patient.T[0],patient.T[1])
+    mean = np.mean(mood)
+    resid = (mood-mean)
+    line = mlines.Line2D([-10,100],[0,0],color='red')
+    plt.scatter(range(1,len(resid)+1),resid)
+    ax.add_line(line)
+    plt.xlabel('Time (days)')
+    plt.ylabel('Residuals')
+    plt.title('Residual vs Time for subject %s'%names[i])
+    
+plt.tight_layout()
+plt.show()
+    
 #%% Output results to a file
 from helperFunctions import writeTableToCSV
 isWriteToFile = 0

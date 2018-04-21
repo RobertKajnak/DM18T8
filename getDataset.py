@@ -92,7 +92,6 @@ def getDataset():
                 
     
     #NOTE: next(iter(patients.values())) can be used ot access first element
-    target = 'mood'
     attributeList = ['mood',
      'screen',
      'appCat.builtin',
@@ -163,33 +162,29 @@ def getDataset():
         #else:
         #    print(i)
     
-    #%% preporcessing the RAW data
-    from sklearn.preprocessing import Imputer
-    
+    #%% preporcessing the RAW data -- removing 4sigma outliers,
+    #filling in missing values with means, adding 0 if the whole attribute is epty    
     patientsEstimated = []
     
-    #flag = True
+
     for patient in patientsTrimmed:
         #calculate variance
+        #parse patient column by column. filter out the nan values within colum. 
+        #Calculate std from the remaining values
         stds = [np.std(list(filter(lambda x : not np.isnan(x) , a))) for a in patient.transpose()]
-        means = [np.mean(a) for a in patient.transpose()]
-            
+        means = [np.mean(list(filter(lambda x : not np.isnan(x) , a))) for a in patient.transpose()]
+    
         patientNoOutliers = \
                 np.array(list(list(map(lambda x: means[i]-4*stds[i] if x<means[i]-4*stds[i] else \
                       means[i]+4*stds[i] if x>means[i]+4*stds[i] else x,row)) \
                         for i,row in enumerate(patient.T))).T
-        #if flag:
-        #    print(patientNoOutliers[-4])
-        #meansNew = [np.mean(a) for a in patientNoOutliers]
-        #patientsFilled = np.array(list(list(map(lambda x: meansNew[i] if x>10 else x,row)) \
-        #                      for i,row in enumerate(patientNoOutliers))).T
-        #if flag:
-        #    print(patientsFilled[-4])
-            
-        imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
-        imp.fit(patientNoOutliers)
-        patientEstimated = imp.transform(patientNoOutliers)
-        #flag=False;
+    
+        meansNew = [np.mean(list(filter(lambda x : not np.isnan(x) , a))) for a in patientNoOutliers.T]
+        meansNew = [0.0 if np.isnan(mean) else mean for mean in meansNew]
+    
+        patientsFilled = np.array(list(list(map(lambda x: meansNew[i] if np.isnan(x) else x,row)) \
+                              for i,row in enumerate(patientNoOutliers.T))).T
+                    
         '''
         maximums = [max(a) for a in patientEstimated]
         minimums = [min(a) for a in patientEstimated]
@@ -198,5 +193,5 @@ def getDataset():
             np.array(list(list(map(lambda x: ((x - minimums[i])/(maximums[i] - minimums[i])),row)) \
                         for i,row in enumerate(patientEstimated))).T
         '''                           
-        patientsEstimated.append(patientEstimated)
+        patientsEstimated.append(patientsFilled)
     return patientsEstimated,attributeList
