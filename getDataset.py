@@ -182,14 +182,55 @@ def getDataset():
     
         patientsFilled = np.array(list(list(map(lambda x: meansNew[i] if np.isnan(x) else x,row)) \
                               for i,row in enumerate(patientNoOutliers.T))).T
-            
-        '''
-        maximums = [max(a) for a in patientEstimated]
-        minimums = [min(a) for a in patientEstimated]
-        
-        patientNormalized = \
-            np.array(list(list(map(lambda x: ((x - minimums[i])/(maximums[i] - minimums[i])),row)) \
-                        for i,row in enumerate(patientEstimated))).T
-        '''                           
+                                    
         patientsEstimated.append(patientsFilled)
     return patientsEstimated,attributeList
+
+def getNormalizedDataset():
+
+    [patientsFilled,attributeList ] = getDataset()
+    #%%construct the new attribute List. Constructing it in the for loop with variables
+    #  would require adding extra flags and checks
+    attributeListNew = []
+    skip = ['mood_count','call_count','sms_count','circumplex.arousal_count','circumplex.valence_count','activity_count']
+    for attribute in attributeList:
+        if  attribute in skip:
+            continue;
+        if 'count' in attribute:
+            attributeListNew.append('%s_avg'%attribute[:-6])
+        else:
+            attributeListNew.append(attribute);
+            
+    #%% Cut the values from before, calculate avarages and normalize where necessary
+    patientsNormalized = [] 
+    for patient in patientsFilled:
+        #remove sum of mood and replace wih mood
+        normVal=[];
+        #Skipping mood, mood_count
+        for i in range(patient.T.shape[0]):
+            name = attributeList[i]
+            skip = ['mood','call_count', 'sms_count','circumplex.valence', 'circumplex.arousal','activity']
+            if name in skip :
+                continue;
+            
+            if 'count' in name:
+                val = np.divide(patient.T[i-1],patient.T[i])
+            else:
+                val = patient.T[i]
+            
+            #actual normalization
+            if name == 'mood_count':
+                val = (val-1)/9
+            if 'circumplex' in name:
+                val = (val+2)/4;
+            
+            normVal.append(val)
+        
+        patientsNormalized.append(np.array(normVal).T)
+        
+    return patientsNormalized,attributeListNew
+
+
+
+
+

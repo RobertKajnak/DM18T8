@@ -1,6 +1,6 @@
 from helperFunctions import plotPatient
 from helperFunctions import writePatientToCSV
-from getDataset import getDataset
+from getDataset import getNormalizedDataset
 
 
 #def main():
@@ -12,7 +12,7 @@ from getDataset import getDataset
  
  attrubiteList == list of the attributes for the columns, i.e.:
  ['mood','mood_count',...,'sleep','nightlife']'''
-[dataset,attributeList] = getDataset()
+[dataset,attributeList] = getNormalizedDataset()
 
 
 '''First parameter is the patient to be plotted, second is the titles for the

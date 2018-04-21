@@ -172,11 +172,8 @@ for i in range(npatients):
     #reducedPatient0.shape = (1,reducedPatient0.shape[0],reducedPatient0.shape[1])
 
 #%% preporcessing the RAW data
-from sklearn.preprocessing import Imputer
-
+    
 patientsEstimated = []
-
-flag = True
 for patient in patientsTrimmed:
     #calculate variance
     #parse patient column by column. filter out the nan values within colum. 
@@ -185,8 +182,8 @@ for patient in patientsTrimmed:
     means = [np.mean(list(filter(lambda x : not np.isnan(x) , a))) for a in patient.transpose()]
 
     patientNoOutliers = \
-            np.array(list(list(map(lambda x: means[i]-4*stds[i] if x<means[i]-4*stds[i] else \
-                  means[i]+4*stds[i] if x>means[i]+4*stds[i] else x,row)) \
+            np.array(list(list(map(lambda x: means[i]-3*stds[i] if x<means[i]-3*stds[i] else \
+                  means[i]+3*stds[i] if x>means[i]+3*stds[i] else x,row)) \
                     for i,row in enumerate(patient.T))).T
 
     meansNew = [np.mean(list(filter(lambda x : not np.isnan(x) , a))) for a in patientNoOutliers.T]
@@ -195,10 +192,6 @@ for patient in patientsTrimmed:
     patientsFilled = np.array(list(list(map(lambda x: meansNew[i] if np.isnan(x) else x,row)) \
                           for i,row in enumerate(patientNoOutliers.T))).T
         
-    imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
-    imp.fit(patientNoOutliers)
-    patientEstimated = imp.transform(patientsFilled)
-    
     '''
     maximums = [max(a) for a in patientEstimated]
     minimums = [min(a) for a in patientEstimated]
@@ -209,10 +202,15 @@ for patient in patientsTrimmed:
     '''                           
     patientsEstimated.append(patientsFilled)
     
-est = patientsEstimated[0].T[4]
-trim = patientsTrimmed[0].T[4]
+est = patientsEstimated[1].T[4]
+trim = patientsTrimmed[1].T[4]
 print('max est:%f  trim: %f'%(max(est),max(trim)))
 print('expected: %f'%(np.mean(trim)+4*np.std(trim)))
+
+est = patientsEstimated[1].T[1][1:]
+trim = patientsTrimmed[1].T[1][1:]
+print('min est:%f  trim: %f'%(min(est),min(trim)))
+print('expected: %f'%(np.mean(trim)-4*np.std(trim)))
 plotPatient(patientsTrimmed[1],attributeList)
 plotPatient(patientsEstimated[1],attributeList)
 for i in patientsEstimated:
