@@ -1,24 +1,44 @@
 #%% plot two of the attributes to see visually check results
 import matplotlib.pyplot as plt
 import numpy as np
-def writeTableToCSV(filename,table,attributeList):
-    [npatients,ndays,nattribs] = table.shape
+def writeTablesToCSV(filename,tables,attributeList):
+    [npatients,ndays,nattribs] = tables.shape
     
     f = open(filename,'w')
     for attr in attributeList:
         f.write(attr)
         if attr != attributeList[-1]:
             f.write(',')
+    f.write('\n')
         
     for i in range(npatients):    
         for j in range(ndays):
             for k in range(nattribs):
-                f.write(str(table[i,j,k]))
+                f.write(str(tables[i,j,k]))
                 if k!=nattribs-1:
                     f.write(',')
             f.write('\n')
             
         #f.write('\n')
+    f.close();
+    return
+def writePatientToCSV(filename,table,attributeList=[]):
+    f = open(filename,'w')
+    [ndays,nattribs] = table.shape
+    
+   # if attributeList==[]:
+    for attr in attributeList:
+        f.write(attr)
+        if attr != attributeList[-1]:
+            f.write(',')
+    f.write('\n')
+    
+    for j in range(ndays):
+        for k in range(nattribs):
+            f.write(str(table[j,k]))
+            if k!=nattribs-1:
+                f.write(',')
+        f.write('\n')
     f.close();
     return
 
