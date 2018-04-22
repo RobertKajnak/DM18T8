@@ -19,9 +19,16 @@ from getDataset import getNormalizedDataset
 graphs i.e. the attribute names'''
 plotPatient(dataset[1],attributeList)
 
-'''To save a patient to a  file specify the filename, the patient and the
-attribute list returned above'''
-writePatientToCSV('patient1.csv',dataset[1],attributeList)
+'''To save an individual patient to a  file specify the filename, the patient 
+and the attribute list returned above'''
+#writePatientToCSV('patient1.csv',dataset[1],attributeList)
+
+'''To export all the patient data uncomment the lines below'''
+import os
+if not os.path.exists('patientData'):
+    os.makedirs('patientData')
+for i,patient in enumerate(dataset):
+    writePatientToCSV('patientData/patient%d.csv'%i,patient,attributeList)
 
 #if __name__ == '__main__':
 #  main()
