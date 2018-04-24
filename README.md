@@ -22,6 +22,6 @@ git add [filename] ( . adds all files, ignoring only some python specific chache
 [with editor]  git commit  [use two newlines to separate commit title and body]  
 git push https://github.com/RobertKajnak/IloveCI_2017_T90 master  
 
-git diff --chached --name-status  [check added files (e.g. after git add . (A=added,M=modified,D=deleted)]
-git diff --chached  {check differences as well}
-git reset [undo add files]
+git diff --chached --name-status  [check added files (e.g. after git add . (A=added,M=modified,D=deleted)]  
+git diff --chached  {check differences as well}  
+git reset [undo add files]  
