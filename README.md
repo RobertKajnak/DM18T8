@@ -26,6 +26,6 @@ Data Mining 2018 for team 8
 **git push** https://github.com/RobertKajnak/DM18T8.git **master**  
 
 ## Other useful commands  
-**git diff --chached --name-status** \[check added files (e.g. after git add . (A=added,M=modified,D=deleted)\]  
-**git diff --chached**  *check differences as well*  
+**git diff --cached --name-status** \[check added files (e.g. after git add . (A=added,M=modified,D=deleted)\]  
+**git diff --cached**  *check differences as well*  
 **git reset** *undo add files*  
