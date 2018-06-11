@@ -7,7 +7,7 @@ Data Mining 2018 for team 8
 ## Configure Git Bash  
 ### Authentication
 **git config --global user.email** "\[username\]"  *why type it in every time?*  
-**git config credential.helper store** *if you want password remembered:*  
+**git config --global credential.helper store** *if you want password remembered*  
 
 ### Editor for commits  
 #### to use notepad:   
